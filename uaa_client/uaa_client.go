@@ -21,6 +21,14 @@ type Endpoint struct {
 }
 
 
+//AccessToken - represents a authenticated token from UAA
+type AccessToken struct {
+	Token     string `json:"access_token"`
+	Type      string `json:"token_type"`
+	ExpiresIn int    `json:"expires_in"`
+	Scope     string
+	JTI       string
+}
 
 // Config represents all the configuration for making a oauth2 call
 type Config struct {

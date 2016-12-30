@@ -14,19 +14,19 @@ type AutoScalerClient interface {
 }
 
 type AutoscalerConfig struct {
-	uaa_client.Config
+	UAAConfig *uaa_client.Config
 	AutoscalerAPIUrl string
 	InstanceGUID string
 }
 
 type DefaultAutoScalerClient struct {
 	httpClient   uaa_client.OauthHttpWrapper
-	config AutoscalerConfig
+	config *AutoscalerConfig
 }
 
-func NewAutoScalerClient(autoscalerConfig AutoscalerConfig) (AutoScalerClient, error) {
-	uaaConfig := autoscalerConfig.Config
-	oauthWrapper, err := uaa_client.NewClient(&uaaConfig)
+func NewAutoScalerClient(autoscalerConfig *AutoscalerConfig) (AutoScalerClient, error) {
+	uaaConfig := autoscalerConfig.UAAConfig
+	oauthWrapper, err := uaa_client.NewClient(uaaConfig)
 
 	if err != nil {
 		return nil, err
