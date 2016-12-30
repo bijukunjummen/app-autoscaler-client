@@ -1,27 +1,27 @@
 package client
 
 import (
+	"fmt"
 	"github.com/bijukunjummen/app-autoscaler-client/instance"
 	"github.com/bijukunjummen/app-autoscaler-client/uaa_client"
-	"fmt"
 
 	"encoding/json"
 )
 
 type AutoScalerClient interface {
 	GetServiceBindings() (*instance.ServiceInstances, error)
-	GetBinding(bindingGuid string) (*instance.Binding, error)
+	GetBinding(bindingGuid string) (*instance.BindingResource, error)
 }
 
 type AutoscalerConfig struct {
-	UAAConfig *uaa_client.Config
+	UAAConfig        *uaa_client.Config
 	AutoscalerAPIUrl string
-	InstanceGUID string
+	InstanceGUID     string
 }
 
 type DefaultAutoScalerClient struct {
-	httpClient   uaa_client.OauthHttpWrapper
-	config *AutoscalerConfig
+	httpClient uaa_client.OauthHttpWrapper
+	config     *AutoscalerConfig
 }
 
 func NewAutoScalerClient(autoscalerConfig *AutoscalerConfig) (AutoScalerClient, error) {
@@ -33,19 +33,19 @@ func NewAutoScalerClient(autoscalerConfig *AutoscalerConfig) (AutoScalerClient, 
 	}
 
 	return &DefaultAutoScalerClient{
-		httpClient:   oauthWrapper,
-		config: autoscalerConfig,
+		httpClient: oauthWrapper,
+		config:     autoscalerConfig,
 	}, nil
 }
 
 func (autoscalerClient *DefaultAutoScalerClient) GetServiceBindings() (*instance.ServiceInstances, error) {
 	serviceBindingsUrl := fmt.Sprintf("%s/instances/%s/bindings", autoscalerClient.config.AutoscalerAPIUrl, autoscalerClient.config.InstanceGUID)
 	request, err := autoscalerClient.httpClient.NewRequest("GET", serviceBindingsUrl, nil)
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
 	resp, err := autoscalerClient.httpClient.Do(request)
-	if err!=nil {
+	if err != nil {
 		return nil, err
 	}
 
@@ -60,6 +60,22 @@ func (autoscalerClient *DefaultAutoScalerClient) GetServiceBindings() (*instance
 
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) GetBinding(bindingGuid string) (*instance.Binding, error) {
-	return nil, fmt.Errorf("Not Implemented!")
+func (autoscalerClient *DefaultAutoScalerClient) GetBinding(bindingGuid string) (*instance.BindingResource, error) {
+	bindingUrl := fmt.Sprintf("%s/bindings/%s", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid)
+	request, err := autoscalerClient.httpClient.NewRequest("GET", bindingUrl, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := autoscalerClient.httpClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	var binding instance.BindingResource
+
+	decoder := json.NewDecoder(resp.Body)
+	if err = decoder.Decode(&binding); err != nil {
+		return nil, err
+	}
+	return &binding, nil
 }

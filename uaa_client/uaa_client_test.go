@@ -5,13 +5,11 @@ import (
 	. "github.com/onsi/gomega"
 
 	. "github.com/bijukunjummen/app-autoscaler-client/uaa_client"
-	"net/http"
 	"github.com/onsi/gomega/ghttp"
+	"net/http"
 )
 
-
 var _ = Describe("UAA Client", func() {
-
 
 	Context("Given a sample UAA Client", func() {
 		var server *ghttp.Server
@@ -23,9 +21,9 @@ var _ = Describe("UAA Client", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest("GET", "/v2/info"),
-					ghttp.RespondWithJSONEncoded(http.StatusOK, Endpoint {
+					ghttp.RespondWithJSONEncoded(http.StatusOK, Endpoint{
 						AuthorizationEndpoint: server.URL(),
-						TokenEndpoint: server.URL(),
+						TokenEndpoint:         server.URL(),
 					}),
 				),
 				ghttp.CombineHandlers(
@@ -41,15 +39,12 @@ var _ = Describe("UAA Client", func() {
 					ghttp.VerifyHeader(http.Header{
 						"Authorization": []string{"Bearer test-token"},
 					}),
-					ghttp.RespondWithJSONEncoded(http.StatusOK, AccessToken{
-						Token: "test-token",
-					}),
 				),
 			)
 			config = Config{
-				CCApiUrl: server.URL() ,
-				Username: "admin",
-				Password: "admin",
+				CCApiUrl:          server.URL(),
+				Username:          "admin",
+				Password:          "admin",
 				SkipSslValidation: true,
 			}
 
@@ -73,7 +68,6 @@ var _ = Describe("UAA Client", func() {
 			Ω(err).Should(BeNil())
 
 		})
-
 
 	})
 })

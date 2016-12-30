@@ -4,22 +4,20 @@ import (
 	"fmt"
 	"net/http"
 
+	"crypto/tls"
+	"encoding/json"
+	"errors"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
-	"crypto/tls"
-	"errors"
-	"encoding/json"
 	"golang.org/x/oauth2/clientcredentials"
 	"io"
 )
-
 
 // Endpoint to Cloud Controller
 type Endpoint struct {
 	AuthorizationEndpoint string `json:"authorization_endpoint"`
 	TokenEndpoint         string `json:"token_endpoint"`
 }
-
 
 //AccessToken - represents a authenticated token from UAA
 type AccessToken struct {
@@ -43,8 +41,8 @@ type Config struct {
 }
 
 type OauthHttpWrapper interface {
-	NewCCRequest(method, path string, body io.Reader)  (*http.Request, error)
-	NewRequest(method, url string, body io.Reader)  (*http.Request, error)
+	NewCCRequest(method, path string, body io.Reader) (*http.Request, error)
+	NewRequest(method, url string, body io.Reader) (*http.Request, error)
 	Do(request *http.Request) (*http.Response, error)
 }
 
@@ -105,11 +103,11 @@ func (client *TokenHandlingClient) Do(request *http.Request) (*http.Response, er
 	return client.Config.httpClient.Do(request)
 }
 
-func (client *TokenHandlingClient) NewCCRequest(method, path string, body io.Reader)  (*http.Request, error) {
+func (client *TokenHandlingClient) NewCCRequest(method, path string, body io.Reader) (*http.Request, error) {
 	return http.NewRequest(method, fmt.Sprintf("%s%s", client.Config.CCApiUrl, path), body)
 }
 
-func (client *TokenHandlingClient) NewRequest(method, url string, body io.Reader)  (*http.Request, error) {
+func (client *TokenHandlingClient) NewRequest(method, url string, body io.Reader) (*http.Request, error) {
 	return http.NewRequest(method, url, body)
 }
 

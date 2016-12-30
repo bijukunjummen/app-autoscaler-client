@@ -45,21 +45,21 @@ type Relationships struct {
 
 //Binding -
 type Binding struct {
-	GUID                  string          `json:"guid"`
-	CreatedAt             string          `json:"created_at"`
-	UpdatedAt             string          `json:"updated_at"`
-	AppName               string          `json:"app_name"`
-	MinInstances          int             `json:"min_instances"`
-	MaxInstances          int             `json:"max_instances"`
-	ExpectedInstanceCount int             `json:"expected_instance_count"`
-	Enabled               bool            `json:"enabled"`
+	GUID                  string `json:"guid"`
+	CreatedAt             string `json:"created_at"`
+	UpdatedAt             string `json:"updated_at"`
+	AppName               string `json:"app_name"`
+	MinInstances          int    `json:"min_instances"`
+	MaxInstances          int    `json:"max_instances"`
+	ExpectedInstanceCount int    `json:"expected_instance_count"`
+	Enabled               bool   `json:"enabled"`
 }
 
 // Resource -
 type BindingResource struct {
 	Binding
-	Relationships         Relationships   `json:"relationships"`
-	Links                 map[string]Link `json:"links"`
+	Relationships Relationships   `json:"relationships"`
+	Links         map[string]Link `json:"links"`
 }
 
 // Link -
