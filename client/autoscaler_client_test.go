@@ -6,6 +6,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"encoding/json"
+	"github.com/bijukunjummen/app-autoscaler-client/instance"
 	"github.com/onsi/gomega/ghttp"
 	"net/http"
 )
@@ -156,28 +158,22 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 					Token: "test-token",
 				}),
 			),
-			ghttp.CombineHandlers(
-				ghttp.VerifyRequest("GET", "/api/instances/c017ec06-cf4c-42fa-adbd-1b6a290d8d6a/bindings"),
-
-				ghttp.VerifyHeader(http.Header{
-					"Authorization": []string{"Bearer test-token"},
-				}),
-				ghttp.RespondWith(http.StatusOK, sampleServiceInstancesJson),
-			),
-			ghttp.CombineHandlers(
-				ghttp.VerifyRequest("GET", "/api/bindings/mybinding"),
-
-				ghttp.VerifyHeader(http.Header{
-					"Authorization": []string{"Bearer test-token"},
-				}),
-				ghttp.RespondWith(http.StatusOK, sampleBindingJson),
-			),
 		)
 	})
 
 	Context("Given a Autoscaler Client", func() {
 
-		It("Should be able to query for information", func() {
+		It("Should be able to Get Service Bindings for a App Scaler instance", func() {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/api/instances/c017ec06-cf4c-42fa-adbd-1b6a290d8d6a/bindings"),
+
+					ghttp.VerifyHeader(http.Header{
+						"Authorization": []string{"Bearer test-token"},
+					}),
+					ghttp.RespondWith(http.StatusOK, sampleServiceInstancesJson),
+				),
+			)
 			client, err := NewAutoScalerClient(config)
 			Ω(err).Should(BeNil())
 
@@ -186,10 +182,46 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 			Ω(err).Should(BeNil())
 
 			Ω(len(serviceInstances.BindingResources)).Should(Equal(1))
+		})
+		It("Should be able to Get Details of a binding given a binding Id", func() {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/api/bindings/mybinding"),
+
+					ghttp.VerifyHeader(http.Header{
+						"Authorization": []string{"Bearer test-token"},
+					}),
+					ghttp.RespondWith(http.StatusOK, sampleBindingJson),
+				),
+			)
+			client, err := NewAutoScalerClient(config)
+			Ω(err).Should(BeNil())
 
 			binding, err := client.GetBinding("mybinding")
 
 			Ω(binding.AppName).Should(Equal("sample-spring-cloud-svc-ci"))
+		})
+		It("Should be able to Update Details of a binding given a binding Id", func() {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("PUT", "/api/bindings/mybinding"),
+
+					ghttp.VerifyHeader(http.Header{
+						"Authorization": []string{"Bearer test-token"},
+					}),
+					ghttp.RespondWith(http.StatusOK, sampleBindingJson),
+				),
+			)
+			client, err := NewAutoScalerClient(config)
+			Ω(err).Should(BeNil())
+
+			var binding instance.Binding
+			bindingJsonBytes := []byte(sampleBindingJson)
+			json.Unmarshal(bindingJsonBytes, &binding)
+
+			bindingResource, err := client.UpdateBinding("mybinding", &binding)
+
+			Ω(bindingResource.AppName).Should(Equal("sample-spring-cloud-svc-ci"))
 		})
 	})
 })

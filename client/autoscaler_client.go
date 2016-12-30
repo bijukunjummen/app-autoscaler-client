@@ -5,12 +5,14 @@ import (
 	"github.com/bijukunjummen/app-autoscaler-client/instance"
 	"github.com/bijukunjummen/app-autoscaler-client/uaa_client"
 
+	"bytes"
 	"encoding/json"
 )
 
 type AutoScalerClient interface {
 	GetServiceBindings() (*instance.ServiceInstances, error)
 	GetBinding(bindingGuid string) (*instance.BindingResource, error)
+	UpdateBinding(bindingGuid string, binding *instance.Binding) (*instance.BindingResource, error)
 }
 
 type AutoscalerConfig struct {
@@ -78,4 +80,30 @@ func (autoscalerClient *DefaultAutoScalerClient) GetBinding(bindingGuid string) 
 		return nil, err
 	}
 	return &binding, nil
+}
+
+func (autoscalerClient *DefaultAutoScalerClient) UpdateBinding(bindingGuid string, binding *instance.Binding) (*instance.BindingResource, error) {
+	bindingUrl := fmt.Sprintf("%s/bindings/%s", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid)
+
+	body, err := json.Marshal(binding)
+	if err != nil {
+		return nil, err
+	}
+	request, err := autoscalerClient.httpClient.NewRequest("PUT", bindingUrl, bytes.NewBuffer(body))
+
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := autoscalerClient.httpClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	var bindingUpdated instance.BindingResource
+
+	decoder := json.NewDecoder(resp.Body)
+	if err = decoder.Decode(&bindingUpdated); err != nil {
+		return nil, err
+	}
+	return &bindingUpdated, nil
 }
