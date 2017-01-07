@@ -1,4 +1,4 @@
-package instance_test
+package types_test
 
 import (
 	"encoding/json"
@@ -6,7 +6,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	. "github.com/bijukunjummen/app-autoscaler-client/instance"
+	"time"
+
+	. "github.com/bijukunjummen/app-autoscaler-client/types"
 )
 
 var _ = Describe("ServiceInstances type", func() {
@@ -26,7 +28,7 @@ var _ = Describe("ServiceInstances type", func() {
                 "most_recent_event": {
                     "guid": "193809b3-35d4-4483-b5f8-3d9d57bc9f30",
                     "created_at": "2021-01-01T00:00:00Z",
-                    "updated_at": "2021-01-01T00:00:00Z",
+                    "updated_at": "2021-02-01T00:00:00Z",
                     "reading_id": 23,
                     "service_binding_guid": "540f43bc-b9cc-4126-97a4-a56b64052da4",
                     "scaling_factor": 3,
@@ -119,6 +121,8 @@ var _ = Describe("ServiceInstances type", func() {
 				Ω(mre.ServiceBindingGUID).Should(Equal("540f43bc-b9cc-4126-97a4-a56b64052da4"))
 				Ω(mre.ScalingFactor).Should(Equal(3))
 				Ω(mre.Description).Should(HavePrefix("Minimum instance limit"))
+				cd, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
+				Ω(mre.CreatedAt).Should(Equal(cd))
 			})
 
 			It("Should have a next_scheduled_limit_change tag", func() {
@@ -132,6 +136,8 @@ var _ = Describe("ServiceInstances type", func() {
 				Ω(nsl.ServiceBindingGUID).Should(Equal("540f43bc-b9cc-4126-97a4-a56b64052da4"))
 				Ω(nsl.Recurrence).Should(Equal(1))
 				Ω(nsl.Enabled).Should(Equal(true))
+				ea, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
+				Ω(nsl.ExecutesAt).Should(Equal(ea))
 			})
 			It("Should have rules element with exactly 1 rule", func() {
 				rules := relationships.Rules

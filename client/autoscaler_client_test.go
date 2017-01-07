@@ -1,15 +1,18 @@
 package client_test
 
 import (
+	"time"
+
 	. "github.com/bijukunjummen/app-autoscaler-client/client"
 	"github.com/bijukunjummen/app-autoscaler-client/uaa_client"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"encoding/json"
-	"github.com/bijukunjummen/app-autoscaler-client/instance"
-	"github.com/onsi/gomega/ghttp"
 	"net/http"
+
+	"github.com/bijukunjummen/app-autoscaler-client/types"
+	"github.com/onsi/gomega/ghttp"
 )
 
 var _ = Describe("Behavior of Auto Scaler", func() {
@@ -183,6 +186,7 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 
 			Ω(len(serviceInstances.BindingResources)).Should(Equal(1))
 		})
+
 		It("Should be able to Get Details of a binding given a binding Id", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
@@ -198,6 +202,7 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 			Ω(err).Should(BeNil())
 
 			binding, err := client.GetBinding("mybinding")
+			Ω(err).Should(BeNil())
 
 			Ω(binding.AppName).Should(Equal("sample-spring-cloud-svc-ci"))
 		})
@@ -215,13 +220,68 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 			client, err := NewAutoScalerClient(config)
 			Ω(err).Should(BeNil())
 
-			var binding instance.Binding
+			var binding types.Binding
 			bindingJsonBytes := []byte(sampleBindingJson)
 			json.Unmarshal(bindingJsonBytes, &binding)
 
 			bindingResource, err := client.UpdateBinding("mybinding", &binding)
+			Ω(err).Should(BeNil())
 
 			Ω(bindingResource.AppName).Should(Equal("sample-spring-cloud-svc-ci"))
 		})
+	})
+
+	scheduledLimitChanges := `[
+  {
+    "guid": "de743e10-e427-4b02-b3b4-7bf560c201ab",
+    "created_at": "2021-01-01T00:00:00Z",
+    "updated_at": "2021-01-01T00:00:00Z",
+    "executes_at": "2014-11-22T16:00:00Z",
+    "min_instances": 2,
+    "max_instances": 3,
+    "service_binding_guid": "540f43bc-b9cc-4126-97a4-a56b64052da4",
+    "recurrence": 20,
+    "enabled": true
+  },
+  {
+    "guid": "cb9e6e41-ffef-4e68-a585-eb004d9bb122",
+    "created_at": "2021-01-01T00:00:00Z",
+    "updated_at": "2021-01-01T00:00:00Z",
+    "executes_at": "2014-11-22T16:00:00Z",
+    "min_instances": 4,
+    "max_instances": 5,
+    "service_binding_guid": "540f43bc-b9cc-4126-97a4-a56b64052da4",
+    "recurrence": 60,
+    "enabled": true
+  }
+	]`
+
+	It("Should be able to Retrieve Schedules for a binding given a Binding Id", func() {
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest("GET", "/api/bindings/mybinding/scheduled_limit_changes"),
+
+				ghttp.VerifyHeader(http.Header{
+					"Authorization": []string{"Bearer test-token"},
+				}),
+				ghttp.RespondWith(http.StatusOK, scheduledLimitChanges),
+			),
+		)
+		client, _ := NewAutoScalerClient(config)
+		schedules, err := client.GetScheduledLimitChanges("mybinding")
+		Ω(err).Should(BeNil())
+		Ω(len(schedules)).Should(Equal(2))
+		change1 := schedules[0]
+		Ω(change1.GUID).Should(Equal("de743e10-e427-4b02-b3b4-7bf560c201ab"))
+		Ω(change1.MaxInstances).Should(Equal(3))
+		Ω(change1.MinInstances).Should(Equal(2))
+		auditDate, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
+		eDate, _ := time.Parse(time.RFC3339, "2014-11-22T16:00:00Z")
+		Ω(change1.CreatedAt).Should(Equal(auditDate))
+		Ω(change1.UpdatedAt).Should(Equal(auditDate))
+		Ω(change1.ExecutesAt).Should(Equal(eDate))
+		Ω(change1.ServiceBindingGUID).Should(Equal("540f43bc-b9cc-4126-97a4-a56b64052da4"))
+		Ω(change1.Recurrence).Should(Equal(20))
+		Ω(change1.Enabled).Should(Equal(true))
 	})
 })

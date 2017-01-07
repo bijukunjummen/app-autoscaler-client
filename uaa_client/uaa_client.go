@@ -7,10 +7,11 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"io"
+
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/clientcredentials"
-	"io"
 )
 
 // Endpoint to Cloud Controller

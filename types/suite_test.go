@@ -1,4 +1,4 @@
-package instance_test
+package types_test
 
 import (
 	. "github.com/onsi/ginkgo"

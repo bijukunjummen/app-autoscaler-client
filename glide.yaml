@@ -1,5 +1,5 @@
 package: github.com/bijukunjummen/app-autoscaler-client
-import: 
+import:
 - package: github.com/onsi/ginkgo
 - package: github.com/onsi/gomega
 - package: golang.org/x/net/context

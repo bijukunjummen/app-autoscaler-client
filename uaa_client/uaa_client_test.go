@@ -4,9 +4,10 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"net/http"
+
 	. "github.com/bijukunjummen/app-autoscaler-client/uaa_client"
 	"github.com/onsi/gomega/ghttp"
-	"net/http"
 )
 
 var _ = Describe("UAA Client", func() {
