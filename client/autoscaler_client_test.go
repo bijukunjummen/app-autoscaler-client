@@ -231,30 +231,46 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 		})
 	})
 
-	scheduledLimitChanges := `[
-  {
-    "guid": "de743e10-e427-4b02-b3b4-7bf560c201ab",
-    "created_at": "2021-01-01T00:00:00Z",
-    "updated_at": "2021-01-01T00:00:00Z",
-    "executes_at": "2014-11-22T16:00:00Z",
-    "min_instances": 2,
-    "max_instances": 3,
-    "service_binding_guid": "540f43bc-b9cc-4126-97a4-a56b64052da4",
-    "recurrence": 20,
-    "enabled": true
-  },
-  {
-    "guid": "cb9e6e41-ffef-4e68-a585-eb004d9bb122",
-    "created_at": "2021-01-01T00:00:00Z",
-    "updated_at": "2021-01-01T00:00:00Z",
-    "executes_at": "2014-11-22T16:00:00Z",
-    "min_instances": 4,
-    "max_instances": 5,
-    "service_binding_guid": "540f43bc-b9cc-4126-97a4-a56b64052da4",
-    "recurrence": 60,
-    "enabled": true
-  }
+	scheduledLimitChanges :=
+	`[
+	  {
+	    "guid": "de743e10-e427-4b02-b3b4-7bf560c201ab",
+	    "created_at": "2021-01-01T00:00:00Z",
+	    "updated_at": "2021-01-01T00:00:00Z",
+	    "executes_at": "2014-11-22T16:00:00Z",
+	    "min_instances": 2,
+	    "max_instances": 3,
+	    "service_binding_guid": "540f43bc-b9cc-4126-97a4-a56b64052da4",
+	    "recurrence": 20,
+	    "enabled": true
+	  },
+	  {
+	    "guid": "cb9e6e41-ffef-4e68-a585-eb004d9bb122",
+	    "created_at": "2021-01-01T00:00:00Z",
+	    "updated_at": "2021-01-01T00:00:00Z",
+	    "executes_at": "2014-11-22T16:00:00Z",
+	    "min_instances": 4,
+	    "max_instances": 5,
+	    "service_binding_guid": "540f43bc-b9cc-4126-97a4-a56b64052da4",
+	    "recurrence": 60,
+	    "enabled": true
+	  }
 	]`
+
+	scheduledLimitChange :=
+		`
+		{
+		  "guid": "de743e10-e427-4b02-b3b4-7bf560c201ab",
+		  "created_at": "2021-01-01T00:00:00Z",
+		  "updated_at": "2021-01-01T00:00:00Z",
+		  "executes_at": "2014-11-22T16:00:00Z",
+		  "min_instances": 2,
+		  "max_instances": 3,
+		  "service_binding_guid": "540f43bc-b9cc-4126-97a4-a56b64052da4",
+		  "recurrence": 20,
+		  "enabled": true
+		}
+		`
 
 	It("Should be able to Retrieve Schedules for a binding given a Binding Id", func() {
 		server.AppendHandlers(
@@ -283,5 +299,72 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 		Ω(change1.ServiceBindingGUID).Should(Equal("540f43bc-b9cc-4126-97a4-a56b64052da4"))
 		Ω(change1.Recurrence).Should(Equal(20))
 		Ω(change1.Enabled).Should(Equal(true))
+	})
+
+	It("Should be able to update a schedule", func() {
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest("PUT", "/api/bindings/mybinding/scheduled_limit_changes/changeid"),
+				ghttp.VerifyHeader(http.Header{
+					"Authorization": []string{"Bearer test-token"},
+				}),
+				ghttp.RespondWith(http.StatusOK, scheduledLimitChange),
+			),
+		)
+
+		client, _ := NewAutoScalerClient(config)
+		var scheduledLimitChangeObj types.ScheduledLimitChange
+		err := json.Unmarshal([]byte(scheduledLimitChange), &scheduledLimitChangeObj)
+		Ω(err).Should(BeNil())
+		scheduleUpdated, err := client.UpdateScheduledLimitChange("mybinding", "changeid", &scheduledLimitChangeObj)
+		Ω(scheduleUpdated.Enabled).Should(BeTrue())
+		Ω(scheduleUpdated.Recurrence).Should(Equal(20))
+		Ω(scheduleUpdated.ServiceBindingGUID).Should(Equal("540f43bc-b9cc-4126-97a4-a56b64052da4"))
+		Ω(scheduleUpdated.MinInstances).Should(Equal(2))
+		Ω(scheduleUpdated.MaxInstances).Should(Equal(3))
+		Ω(scheduleUpdated.GUID).Should(Equal("de743e10-e427-4b02-b3b4-7bf560c201ab"))
+	})
+
+	It("Should be able to create a schedule", func() {
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest("POST", "/api/bindings/mybinding/scheduled_limit_changes"),
+				ghttp.VerifyHeader(http.Header{
+					"Authorization": []string{"Bearer test-token"},
+				}),
+				ghttp.RespondWith(http.StatusOK, scheduledLimitChange),
+			),
+		)
+
+		client, _ := NewAutoScalerClient(config)
+		var scheduledLimitChangeObj types.ScheduledLimitChange
+		err := json.Unmarshal([]byte(scheduledLimitChange), &scheduledLimitChangeObj)
+		Ω(err).Should(BeNil())
+		scheduleUpdated, err := client.CreateScheduledLimitChange("mybinding", &scheduledLimitChangeObj)
+		Ω(scheduleUpdated.Enabled).Should(BeTrue())
+		Ω(scheduleUpdated.Recurrence).Should(Equal(20))
+		Ω(scheduleUpdated.ServiceBindingGUID).Should(Equal("540f43bc-b9cc-4126-97a4-a56b64052da4"))
+		Ω(scheduleUpdated.MinInstances).Should(Equal(2))
+		Ω(scheduleUpdated.MaxInstances).Should(Equal(3))
+		Ω(scheduleUpdated.GUID).Should(Equal("de743e10-e427-4b02-b3b4-7bf560c201ab"))
+	})
+
+	It("Should be able to delete a schedule", func() {
+		server.AppendHandlers(
+			ghttp.CombineHandlers(
+				ghttp.VerifyRequest("DELETE", "/api/bindings/mybinding/scheduled_limit_changes/changeid"),
+				ghttp.VerifyHeader(http.Header{
+					"Authorization": []string{"Bearer test-token"},
+				}),
+				ghttp.RespondWith(http.StatusOK, nil),
+			),
+		)
+
+		client, _ := NewAutoScalerClient(config)
+		var scheduledLimitChangeObj types.ScheduledLimitChange
+		err := json.Unmarshal([]byte(scheduledLimitChange), &scheduledLimitChangeObj)
+		Ω(err).Should(BeNil())
+		err = client.DeleteScheduledLimitChange("mybinding", "changeid")
+		Ω(err).Should(BeNil())
 	})
 })

@@ -18,7 +18,7 @@ type AutoScalerClient interface {
 	GetScheduledLimitChanges(bindingGuid string) ([]types.ScheduledLimitChange, error)
 	CreateScheduledLimitChange(bindingGuid string, scheduledLimitChange *types.ScheduledLimitChange) (*types.ScheduledLimitChange, error)
 	UpdateScheduledLimitChange(bindingGuid string, changeGuid string, scheduledLimitChange *types.ScheduledLimitChange) (*types.ScheduledLimitChange, error)
-	DeleteScheduledLimitChange(bindingGuid string, changeGuid string, scheduledLimitChange *types.ScheduledLimitChange) error
+	DeleteScheduledLimitChange(bindingGuid string, changeGuid string) error
 }
 
 type AutoscalerConfig struct {
@@ -120,6 +120,7 @@ func (autoscalerClient *DefaultAutoScalerClient) GetScalingDecisions(bindingGuid
 
 func (autoscalerClient *DefaultAutoScalerClient) GetScheduledLimitChanges(bindingGuid string) ([]types.ScheduledLimitChange, error) {
 	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid)
+
 	request, err := autoscalerClient.httpClient.NewRequest("GET", schedulesForBindingUrl, nil)
 	if err != nil {
 		return nil, err
@@ -139,11 +140,71 @@ func (autoscalerClient *DefaultAutoScalerClient) GetScheduledLimitChanges(bindin
 }
 
 func (autoscalerClient *DefaultAutoScalerClient) CreateScheduledLimitChange(bindingGuid string, scheduledLimitChange *types.ScheduledLimitChange) (*types.ScheduledLimitChange, error) {
-	return nil, fmt.Errorf("Not implemented yet!")
+	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid)
+
+	body, err := json.Marshal(scheduledLimitChange)
+	if err != nil {
+		return nil, err
+	}
+
+	request, err := autoscalerClient.httpClient.NewRequest("POST", schedulesForBindingUrl, bytes.NewBuffer(body))
+
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := autoscalerClient.httpClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	var scheduledLimitChangeUpdated types.ScheduledLimitChange
+
+	decoder := json.NewDecoder(resp.Body)
+	if err = decoder.Decode(&scheduledLimitChangeUpdated); err != nil {
+		return nil, err
+	}
+	return &scheduledLimitChangeUpdated, nil
 }
+
 func (autoscalerClient *DefaultAutoScalerClient) UpdateScheduledLimitChange(bindingGuid string, changeGuid string, scheduledLimitChange *types.ScheduledLimitChange) (*types.ScheduledLimitChange, error) {
-	return nil, fmt.Errorf("Not implemented yet!")
+	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes/%s", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid, changeGuid)
+
+	body, err := json.Marshal(scheduledLimitChange)
+	if err != nil {
+		return nil, err
+	}
+
+	request, err := autoscalerClient.httpClient.NewRequest("PUT", schedulesForBindingUrl, bytes.NewBuffer(body))
+
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := autoscalerClient.httpClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	var scheduledLimitChangeUpdated types.ScheduledLimitChange
+
+	decoder := json.NewDecoder(resp.Body)
+	if err = decoder.Decode(&scheduledLimitChangeUpdated); err != nil {
+		return nil, err
+	}
+	return &scheduledLimitChangeUpdated, nil
 }
-func (autoscalerClient *DefaultAutoScalerClient) DeleteScheduledLimitChange(bindingGuid string, changeGuid string, scheduledLimitChange *types.ScheduledLimitChange) error {
-	return fmt.Errorf("Not implemented yet!")
+func (autoscalerClient *DefaultAutoScalerClient) DeleteScheduledLimitChange(bindingGuid string, changeGuid string) error {
+	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes/%s", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid, changeGuid)
+
+	request, err := autoscalerClient.httpClient.NewRequest("DELETE", schedulesForBindingUrl, nil)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = autoscalerClient.httpClient.Do(request)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
