@@ -122,7 +122,7 @@ var _ = Describe("ServiceInstances type", func() {
 				Ω(mre.ScalingFactor).Should(Equal(3))
 				Ω(mre.Description).Should(HavePrefix("Minimum instance limit"))
 				cd, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
-				Ω(mre.CreatedAt).Should(Equal(cd))
+				Ω(*mre.CreatedAt).Should(Equal(cd))
 			})
 
 			It("Should have a next_scheduled_limit_change tag", func() {
@@ -137,7 +137,7 @@ var _ = Describe("ServiceInstances type", func() {
 				Ω(nsl.Recurrence).Should(Equal(1))
 				Ω(nsl.Enabled).Should(Equal(true))
 				ea, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
-				Ω(nsl.ExecutesAt).Should(Equal(ea))
+				Ω(*nsl.ExecutesAt).Should(Equal(ea))
 			})
 			It("Should have rules element with exactly 1 rule", func() {
 				rules := relationships.Rules

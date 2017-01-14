@@ -231,8 +231,8 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 		})
 	})
 
-	scheduledLimitChanges :=
-	`[
+	scheduledLimitChangesResource :=
+		`{"resources": [
 	  {
 	    "guid": "de743e10-e427-4b02-b3b4-7bf560c201ab",
 	    "created_at": "2021-01-01T00:00:00Z",
@@ -256,7 +256,7 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 	    "recurrence": 60,
 	    "enabled": true
 	  }
-	]`
+	]}`
 
 	scheduledLimitChange :=
 		`
@@ -281,7 +281,7 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 				ghttp.VerifyHeader(http.Header{
 					"Authorization": []string{"Bearer test-token"},
 				}),
-				ghttp.RespondWith(http.StatusOK, scheduledLimitChanges),
+				ghttp.RespondWith(http.StatusOK, scheduledLimitChangesResource),
 			),
 		)
 		client, _ := NewAutoScalerClient(config)
@@ -294,9 +294,9 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 		Ω(change1.MinInstances).Should(Equal(2))
 		auditDate, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
 		eDate, _ := time.Parse(time.RFC3339, "2014-11-22T16:00:00Z")
-		Ω(change1.CreatedAt).Should(Equal(auditDate))
-		Ω(change1.UpdatedAt).Should(Equal(auditDate))
-		Ω(change1.ExecutesAt).Should(Equal(eDate))
+		Ω(*change1.CreatedAt).Should(Equal(auditDate))
+		Ω(*change1.UpdatedAt).Should(Equal(auditDate))
+		Ω(*change1.ExecutesAt).Should(Equal(eDate))
 		Ω(change1.ServiceBindingGUID).Should(Equal("540f43bc-b9cc-4126-97a4-a56b64052da4"))
 		Ω(change1.Recurrence).Should(Equal(20))
 		Ω(change1.Enabled).Should(Equal(true))
@@ -333,7 +333,7 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 				ghttp.VerifyHeader(http.Header{
 					"Authorization": []string{"Bearer test-token"},
 				}),
-				ghttp.RespondWith(http.StatusOK, scheduledLimitChange),
+				ghttp.RespondWith(http.StatusCreated, scheduledLimitChange),
 			),
 		)
 

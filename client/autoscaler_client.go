@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
 )
 
 type AutoScalerClient interface {
@@ -58,6 +59,10 @@ func (autoscalerClient *DefaultAutoScalerClient) GetServiceBindings() (*types.Se
 		return nil, err
 	}
 
+	if resp.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("Bad Response: %s", body)
+	}
 	var serviceInstances types.ServiceInstances
 
 	decoder := json.NewDecoder(resp.Body)
@@ -79,6 +84,10 @@ func (autoscalerClient *DefaultAutoScalerClient) GetBinding(bindingGuid string) 
 	resp, err := autoscalerClient.httpClient.Do(request)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("Bad Response: %s", body)
 	}
 	var binding types.BindingResource
 
@@ -106,6 +115,10 @@ func (autoscalerClient *DefaultAutoScalerClient) UpdateBinding(bindingGuid strin
 	if err != nil {
 		return nil, err
 	}
+	if resp.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("Bad Response: %s", body)
+	}
 	var bindingUpdated types.BindingResource
 
 	decoder := json.NewDecoder(resp.Body)
@@ -116,7 +129,7 @@ func (autoscalerClient *DefaultAutoScalerClient) UpdateBinding(bindingGuid strin
 }
 
 func (autoscalerClient *DefaultAutoScalerClient) GetScalingDecisions(bindingGuid string) ([]types.ScalingDecision, error) {
-	return nil, fmt.Errorf("Not implemented yet!")
+	return nil, fmt.Errorf("%s", "Not implemented...")
 }
 
 func (autoscalerClient *DefaultAutoScalerClient) GetScheduledLimitChanges(bindingGuid string) ([]types.ScheduledLimitChange, error) {
@@ -131,22 +144,18 @@ func (autoscalerClient *DefaultAutoScalerClient) GetScheduledLimitChanges(bindin
 	if err != nil {
 		return nil, err
 	}
-	var scheduledLimitChanges []types.ScheduledLimitChange
-
-	respBytes, err := ioutil.ReadAll(resp.Body)
-
-	fmt.Printf("Got back, %s", string(respBytes))
-
-	if err != nil {
-		return nil, err
+	if resp.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("Bad Response: %s", body)
 	}
 
+	var changesResource types.ScheduledLimitChangesResource
 
-	decoder := json.NewDecoder(bytes.NewReader(respBytes))
-	if err = decoder.Decode(&scheduledLimitChanges); err != nil {
+	decoder := json.NewDecoder(resp.Body)
+	if err = decoder.Decode(&changesResource); err != nil {
 		return nil, err
 	}
-	return scheduledLimitChanges, nil
+	return changesResource.ScheduledLimitChanges, nil
 }
 
 func (autoscalerClient *DefaultAutoScalerClient) CreateScheduledLimitChange(bindingGuid string, scheduledLimitChange *types.ScheduledLimitChange) (*types.ScheduledLimitChange, error) {
@@ -156,6 +165,7 @@ func (autoscalerClient *DefaultAutoScalerClient) CreateScheduledLimitChange(bind
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("%s", string(body))
 
 	request, err := autoscalerClient.httpClient.NewRequest("POST", schedulesForBindingUrl, bytes.NewBuffer(body))
 
@@ -166,6 +176,10 @@ func (autoscalerClient *DefaultAutoScalerClient) CreateScheduledLimitChange(bind
 	resp, err := autoscalerClient.httpClient.Do(request)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode != http.StatusCreated {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("Status Code: %d, Body:%s", resp.StatusCode, body)
 	}
 	var scheduledLimitChangeUpdated types.ScheduledLimitChange
 
@@ -194,6 +208,10 @@ func (autoscalerClient *DefaultAutoScalerClient) UpdateScheduledLimitChange(bind
 	if err != nil {
 		return nil, err
 	}
+	if resp.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return nil, fmt.Errorf("Bad Response: %s", body)
+	}
 	var scheduledLimitChangeUpdated types.ScheduledLimitChange
 
 	decoder := json.NewDecoder(resp.Body)
@@ -211,10 +229,15 @@ func (autoscalerClient *DefaultAutoScalerClient) DeleteScheduledLimitChange(bind
 		return err
 	}
 
-	_, err = autoscalerClient.httpClient.Do(request)
+	resp, err := autoscalerClient.httpClient.Do(request)
 
 	if err != nil {
 		return err
 	}
+	if resp.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		return fmt.Errorf("Bad Response: %s", body)
+	}
+
 	return nil
 }
