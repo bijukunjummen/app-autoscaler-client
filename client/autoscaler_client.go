@@ -8,6 +8,7 @@ import (
 
 	"bytes"
 	"encoding/json"
+	"io/ioutil"
 )
 
 type AutoScalerClient interface {
@@ -132,7 +133,16 @@ func (autoscalerClient *DefaultAutoScalerClient) GetScheduledLimitChanges(bindin
 	}
 	var scheduledLimitChanges []types.ScheduledLimitChange
 
-	decoder := json.NewDecoder(resp.Body)
+	respBytes, err := ioutil.ReadAll(resp.Body)
+
+	fmt.Printf("Got back, %s", string(respBytes))
+
+	if err != nil {
+		return nil, err
+	}
+
+
+	decoder := json.NewDecoder(bytes.NewReader(respBytes))
 	if err = decoder.Decode(&scheduledLimitChanges); err != nil {
 		return nil, err
 	}

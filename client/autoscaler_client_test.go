@@ -242,7 +242,8 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 	    "max_instances": 3,
 	    "service_binding_guid": "540f43bc-b9cc-4126-97a4-a56b64052da4",
 	    "recurrence": 20,
-	    "enabled": true
+	    "enabled": true,
+	    "links":{"self":{"href":"/api/bindings/d3156757-6e5e-40fc-8301-2ca8dec795d2/scheduled_limit_changes/0aebba6f-d389-4d64-6bb6-49c46530945c"},"service_binding":{"href":"/api/bindings/d3156757-6e5e-40fc-8301-2ca8dec795d2"}}
 	  },
 	  {
 	    "guid": "cb9e6e41-ffef-4e68-a585-eb004d9bb122",
