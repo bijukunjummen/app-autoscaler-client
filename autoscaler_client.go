@@ -21,38 +21,38 @@ type AutoScalerClient interface {
 	DeleteScheduledLimitChange(bindingGuid string, changeGuid string) error
 }
 
-type AutoscalerConfig struct {
-	UAAConfig        *Config
+type Config struct {
+	CFConfig         *CFConfig
 	AutoscalerAPIUrl string
 	InstanceGUID     string
 }
 
-type DefaultAutoScalerClient struct {
+type DefaultClient struct {
 	httpClient OauthHttpWrapper
-	config     *AutoscalerConfig
+	config     *Config
 }
 
-func NewAutoScalerClient(autoscalerConfig *AutoscalerConfig) (AutoScalerClient, error) {
-	uaaConfig := autoscalerConfig.UAAConfig
-	oauthWrapper, err := NewClient(uaaConfig)
+func NewClient(autoscalerConfig *Config) (AutoScalerClient, error) {
+	uaaConfig := autoscalerConfig.CFConfig
+	oauthWrapper, err := NewUAAClient(uaaConfig)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &DefaultAutoScalerClient{
+	return &DefaultClient{
 		httpClient: oauthWrapper,
 		config:     autoscalerConfig,
 	}, nil
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) GetServiceBindings() (*ServiceInstances, error) {
-	serviceBindingsUrl := fmt.Sprintf("%s/instances/%s/bindings", autoscalerClient.config.AutoscalerAPIUrl, autoscalerClient.config.InstanceGUID)
-	request, err := autoscalerClient.httpClient.NewRequest("GET", serviceBindingsUrl, nil)
+func (client *DefaultClient) GetServiceBindings() (*ServiceInstances, error) {
+	serviceBindingsUrl := fmt.Sprintf("%s/instances/%s/bindings", client.config.AutoscalerAPIUrl, client.config.InstanceGUID)
+	request, err := client.httpClient.NewRequest("GET", serviceBindingsUrl, nil)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := autoscalerClient.httpClient.Do(request)
+	resp, err := client.httpClient.Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -72,14 +72,14 @@ func (autoscalerClient *DefaultAutoScalerClient) GetServiceBindings() (*ServiceI
 
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) GetBinding(bindingGuid string) (*BindingResource, error) {
-	bindingUrl := fmt.Sprintf("%s/bindings/%s", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid)
-	request, err := autoscalerClient.httpClient.NewRequest("GET", bindingUrl, nil)
+func (client *DefaultClient) GetBinding(bindingGuid string) (*BindingResource, error) {
+	bindingUrl := fmt.Sprintf("%s/bindings/%s", client.config.AutoscalerAPIUrl, bindingGuid)
+	request, err := client.httpClient.NewRequest("GET", bindingUrl, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := autoscalerClient.httpClient.Do(request)
+	resp, err := client.httpClient.Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -96,20 +96,20 @@ func (autoscalerClient *DefaultAutoScalerClient) GetBinding(bindingGuid string) 
 	return &binding, nil
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) UpdateBinding(bindingGuid string, binding *Binding) (*BindingResource, error) {
-	bindingUrl := fmt.Sprintf("%s/bindings/%s", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid)
+func (client *DefaultClient) UpdateBinding(bindingGuid string, binding *Binding) (*BindingResource, error) {
+	bindingUrl := fmt.Sprintf("%s/bindings/%s", client.config.AutoscalerAPIUrl, bindingGuid)
 
 	body, err := json.Marshal(binding)
 	if err != nil {
 		return nil, err
 	}
-	request, err := autoscalerClient.httpClient.NewRequest("PUT", bindingUrl, bytes.NewBuffer(body))
+	request, err := client.httpClient.NewRequest("PUT", bindingUrl, bytes.NewBuffer(body))
 
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := autoscalerClient.httpClient.Do(request)
+	resp, err := client.httpClient.Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -126,19 +126,19 @@ func (autoscalerClient *DefaultAutoScalerClient) UpdateBinding(bindingGuid strin
 	return &bindingUpdated, nil
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) GetScalingDecisions(bindingGuid string) ([]ScalingDecision, error) {
+func (client *DefaultClient) GetScalingDecisions(bindingGuid string) ([]ScalingDecision, error) {
 	return nil, fmt.Errorf("%s", "Not implemented...")
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) GetScheduledLimitChanges(bindingGuid string) ([]ScheduledLimitChange, error) {
-	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid)
+func (client *DefaultClient) GetScheduledLimitChanges(bindingGuid string) ([]ScheduledLimitChange, error) {
+	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes", client.config.AutoscalerAPIUrl, bindingGuid)
 
-	request, err := autoscalerClient.httpClient.NewRequest("GET", schedulesForBindingUrl, nil)
+	request, err := client.httpClient.NewRequest("GET", schedulesForBindingUrl, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := autoscalerClient.httpClient.Do(request)
+	resp, err := client.httpClient.Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -156,8 +156,8 @@ func (autoscalerClient *DefaultAutoScalerClient) GetScheduledLimitChanges(bindin
 	return changesResource.ScheduledLimitChanges, nil
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) CreateScheduledLimitChange(bindingGuid string, scheduledLimitChange *ScheduledLimitChange) (*ScheduledLimitChange, error) {
-	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid)
+func (client *DefaultClient) CreateScheduledLimitChange(bindingGuid string, scheduledLimitChange *ScheduledLimitChange) (*ScheduledLimitChange, error) {
+	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes", client.config.AutoscalerAPIUrl, bindingGuid)
 
 	body, err := json.Marshal(scheduledLimitChange)
 	if err != nil {
@@ -165,13 +165,13 @@ func (autoscalerClient *DefaultAutoScalerClient) CreateScheduledLimitChange(bind
 	}
 	fmt.Printf("%s", string(body))
 
-	request, err := autoscalerClient.httpClient.NewRequest("POST", schedulesForBindingUrl, bytes.NewBuffer(body))
+	request, err := client.httpClient.NewRequest("POST", schedulesForBindingUrl, bytes.NewBuffer(body))
 
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := autoscalerClient.httpClient.Do(request)
+	resp, err := client.httpClient.Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -188,21 +188,21 @@ func (autoscalerClient *DefaultAutoScalerClient) CreateScheduledLimitChange(bind
 	return &scheduledLimitChangeUpdated, nil
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) UpdateScheduledLimitChange(bindingGuid string, changeGuid string, scheduledLimitChange *ScheduledLimitChange) (*ScheduledLimitChange, error) {
-	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes/%s", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid, changeGuid)
+func (client *DefaultClient) UpdateScheduledLimitChange(bindingGuid string, changeGuid string, scheduledLimitChange *ScheduledLimitChange) (*ScheduledLimitChange, error) {
+	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes/%s", client.config.AutoscalerAPIUrl, bindingGuid, changeGuid)
 
 	body, err := json.Marshal(scheduledLimitChange)
 	if err != nil {
 		return nil, err
 	}
 
-	request, err := autoscalerClient.httpClient.NewRequest("PUT", schedulesForBindingUrl, bytes.NewBuffer(body))
+	request, err := client.httpClient.NewRequest("PUT", schedulesForBindingUrl, bytes.NewBuffer(body))
 
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := autoscalerClient.httpClient.Do(request)
+	resp, err := client.httpClient.Do(request)
 	if err != nil {
 		return nil, err
 	}
@@ -218,16 +218,16 @@ func (autoscalerClient *DefaultAutoScalerClient) UpdateScheduledLimitChange(bind
 	}
 	return &scheduledLimitChangeUpdated, nil
 }
-func (autoscalerClient *DefaultAutoScalerClient) DeleteScheduledLimitChange(bindingGuid string, changeGuid string) error {
-	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes/%s", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid, changeGuid)
+func (client *DefaultClient) DeleteScheduledLimitChange(bindingGuid string, changeGuid string) error {
+	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes/%s", client.config.AutoscalerAPIUrl, bindingGuid, changeGuid)
 
-	request, err := autoscalerClient.httpClient.NewRequest("DELETE", schedulesForBindingUrl, nil)
+	request, err := client.httpClient.NewRequest("DELETE", schedulesForBindingUrl, nil)
 
 	if err != nil {
 		return err
 	}
 
-	resp, err := autoscalerClient.httpClient.Do(request)
+	resp, err := client.httpClient.Do(request)
 
 	if err != nil {
 		return err

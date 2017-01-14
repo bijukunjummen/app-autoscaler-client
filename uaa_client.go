@@ -30,7 +30,7 @@ type AccessToken struct {
 }
 
 // Config represents all the configuration for making a oauth2 call
-type Config struct {
+type CFConfig struct {
 	CCApiUrl          string
 	Username          string
 	Password          string
@@ -49,12 +49,12 @@ type OauthHttpWrapper interface {
 
 // Client - UAA Client
 type TokenHandlingClient struct {
-	Config   *Config
+	Config   *CFConfig
 	Endpoint *Endpoint
 }
 
-func DefaultConfig() *Config {
-	return &Config{
+func DefaultCFConfig() *CFConfig {
+	return &CFConfig{
 		CCApiUrl:          "https://api.local.pcfdev.io",
 		Username:          "admin",
 		Password:          "admin",
@@ -64,9 +64,9 @@ func DefaultConfig() *Config {
 }
 
 // NewClient - Creates a new UAA Client
-func NewClient(config *Config) (OauthHttpWrapper, error) {
+func NewUAAClient(config *CFConfig) (OauthHttpWrapper, error) {
 	ctx := context.Background()
-	defConfig := DefaultConfig()
+	defConfig := DefaultCFConfig()
 
 	if !config.SkipSslValidation {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, defConfig.httpClient)
@@ -112,7 +112,7 @@ func (client *TokenHandlingClient) NewRequest(method, url string, body io.Reader
 	return http.NewRequest(method, url, body)
 }
 
-func getUserAuth(config *Config, endpoint *Endpoint, ctx context.Context) (*Config, error) {
+func getUserAuth(config *CFConfig, endpoint *Endpoint, ctx context.Context) (*CFConfig, error) {
 	authConfig := &oauth2.Config{
 		ClientID: "cf",
 		Scopes:   []string{""},
@@ -134,7 +134,7 @@ func getUserAuth(config *Config, endpoint *Endpoint, ctx context.Context) (*Conf
 	return config, err
 }
 
-func getClientAuth(config *Config, endpoint *Endpoint, ctx context.Context) *Config {
+func getClientAuth(config *CFConfig, endpoint *Endpoint, ctx context.Context) *CFConfig {
 	authConfig := &clientcredentials.Config{
 		ClientID:     config.ClientId,
 		ClientSecret: config.ClientSecret,

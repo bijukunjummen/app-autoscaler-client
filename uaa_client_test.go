@@ -14,7 +14,7 @@ var _ = Describe("UAA Client", func() {
 
 	Context("Given a sample UAA Client", func() {
 		var server *ghttp.Server
-		var config Config
+		var config CFConfig
 
 		BeforeEach(func() {
 			server = ghttp.NewServer()
@@ -42,7 +42,7 @@ var _ = Describe("UAA Client", func() {
 					}),
 				),
 			)
-			config = Config{
+			config = CFConfig{
 				CCApiUrl:          server.URL(),
 				Username:          "admin",
 				Password:          "admin",
@@ -57,7 +57,7 @@ var _ = Describe("UAA Client", func() {
 
 		It("Should be able to get the token for the user", func() {
 
-			client, err := NewClient(&config)
+			client, err := NewUAAClient(&config)
 
 			Ω(err).Should(BeNil())
 
