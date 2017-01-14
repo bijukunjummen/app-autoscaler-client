@@ -1,24 +1,22 @@
-package client_test
+package autoscaler_test
 
 import (
 	"time"
 
-	. "github.com/bijukunjummen/app-autoscaler-client/client"
-	"github.com/bijukunjummen/app-autoscaler-client/uaa_client"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"encoding/json"
 	"net/http"
 
-	"github.com/bijukunjummen/app-autoscaler-client/types"
 	"github.com/onsi/gomega/ghttp"
+	"github.com/bijukunjummen/app-autoscaler-client"
 )
 
 var _ = Describe("Behavior of Auto Scaler", func() {
 
 	var server *ghttp.Server
-	var config *AutoscalerConfig
+	var config *autoscaler.AutoscalerConfig
 
 	sampleServiceInstancesJson := `
 	{
@@ -136,8 +134,8 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 	BeforeEach(func() {
 
 		server = ghttp.NewServer()
-		config = &AutoscalerConfig{
-			UAAConfig: &uaa_client.Config{
+		config = &autoscaler.AutoscalerConfig{
+			UAAConfig: &autoscaler.Config{
 				CCApiUrl:          server.URL(),
 				Username:          "user",
 				Password:          "pwd",
@@ -149,7 +147,7 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 		server.AppendHandlers(
 			ghttp.CombineHandlers(
 				ghttp.VerifyRequest("GET", "/v2/info"),
-				ghttp.RespondWithJSONEncoded(http.StatusOK, uaa_client.Endpoint{
+				ghttp.RespondWithJSONEncoded(http.StatusOK, autoscaler.Endpoint{
 					AuthorizationEndpoint: server.URL(),
 					TokenEndpoint:         server.URL(),
 				}),
@@ -157,7 +155,7 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 			ghttp.CombineHandlers(
 				ghttp.VerifyRequest("POST", "/oauth/token"),
 				ghttp.VerifyBasicAuth("cf", ""),
-				ghttp.RespondWithJSONEncoded(http.StatusOK, uaa_client.AccessToken{
+				ghttp.RespondWithJSONEncoded(http.StatusOK, autoscaler.AccessToken{
 					Token: "test-token",
 				}),
 			),
@@ -177,7 +175,7 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 					ghttp.RespondWith(http.StatusOK, sampleServiceInstancesJson),
 				),
 			)
-			client, err := NewAutoScalerClient(config)
+			client, err := autoscaler.NewAutoScalerClient(config)
 			Ω(err).Should(BeNil())
 
 			serviceInstances, err := client.GetServiceBindings()
@@ -198,7 +196,7 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 					ghttp.RespondWith(http.StatusOK, sampleBindingJson),
 				),
 			)
-			client, err := NewAutoScalerClient(config)
+			client, err := autoscaler.NewAutoScalerClient(config)
 			Ω(err).Should(BeNil())
 
 			binding, err := client.GetBinding("mybinding")
@@ -217,10 +215,10 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 					ghttp.RespondWith(http.StatusOK, sampleBindingJson),
 				),
 			)
-			client, err := NewAutoScalerClient(config)
+			client, err := autoscaler.NewAutoScalerClient(config)
 			Ω(err).Should(BeNil())
 
-			var binding types.Binding
+			var binding autoscaler.Binding
 			bindingJsonBytes := []byte(sampleBindingJson)
 			json.Unmarshal(bindingJsonBytes, &binding)
 
@@ -284,7 +282,7 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 				ghttp.RespondWith(http.StatusOK, scheduledLimitChangesResource),
 			),
 		)
-		client, _ := NewAutoScalerClient(config)
+		client, _ := autoscaler.NewAutoScalerClient(config)
 		schedules, err := client.GetScheduledLimitChanges("mybinding")
 		Ω(err).Should(BeNil())
 		Ω(len(schedules)).Should(Equal(2))
@@ -313,8 +311,8 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 			),
 		)
 
-		client, _ := NewAutoScalerClient(config)
-		var scheduledLimitChangeObj types.ScheduledLimitChange
+		client, _ := autoscaler.NewAutoScalerClient(config)
+		var scheduledLimitChangeObj autoscaler.ScheduledLimitChange
 		err := json.Unmarshal([]byte(scheduledLimitChange), &scheduledLimitChangeObj)
 		Ω(err).Should(BeNil())
 		scheduleUpdated, err := client.UpdateScheduledLimitChange("mybinding", "changeid", &scheduledLimitChangeObj)
@@ -337,8 +335,8 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 			),
 		)
 
-		client, _ := NewAutoScalerClient(config)
-		var scheduledLimitChangeObj types.ScheduledLimitChange
+		client, _ := autoscaler.NewAutoScalerClient(config)
+		var scheduledLimitChangeObj autoscaler.ScheduledLimitChange
 		err := json.Unmarshal([]byte(scheduledLimitChange), &scheduledLimitChangeObj)
 		Ω(err).Should(BeNil())
 		scheduleUpdated, err := client.CreateScheduledLimitChange("mybinding", &scheduledLimitChangeObj)
@@ -361,8 +359,8 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 			),
 		)
 
-		client, _ := NewAutoScalerClient(config)
-		var scheduledLimitChangeObj types.ScheduledLimitChange
+		client, _ := autoscaler.NewAutoScalerClient(config)
+		var scheduledLimitChangeObj autoscaler.ScheduledLimitChange
 		err := json.Unmarshal([]byte(scheduledLimitChange), &scheduledLimitChangeObj)
 		Ω(err).Should(BeNil())
 		err = client.DeleteScheduledLimitChange("mybinding", "changeid")

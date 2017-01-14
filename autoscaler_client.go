@@ -1,10 +1,8 @@
-package client
+package autoscaler
 
 import (
 	"fmt"
 
-	"github.com/bijukunjummen/app-autoscaler-client/types"
-	"github.com/bijukunjummen/app-autoscaler-client/uaa_client"
 
 	"bytes"
 	"encoding/json"
@@ -13,30 +11,30 @@ import (
 )
 
 type AutoScalerClient interface {
-	GetServiceBindings() (*types.ServiceInstances, error)
-	GetBinding(bindingGuid string) (*types.BindingResource, error)
-	UpdateBinding(bindingGuid string, binding *types.Binding) (*types.BindingResource, error)
-	GetScalingDecisions(bindingGuid string) ([]types.ScalingDecision, error)
-	GetScheduledLimitChanges(bindingGuid string) ([]types.ScheduledLimitChange, error)
-	CreateScheduledLimitChange(bindingGuid string, scheduledLimitChange *types.ScheduledLimitChange) (*types.ScheduledLimitChange, error)
-	UpdateScheduledLimitChange(bindingGuid string, changeGuid string, scheduledLimitChange *types.ScheduledLimitChange) (*types.ScheduledLimitChange, error)
+	GetServiceBindings() (*ServiceInstances, error)
+	GetBinding(bindingGuid string) (*BindingResource, error)
+	UpdateBinding(bindingGuid string, binding *Binding) (*BindingResource, error)
+	GetScalingDecisions(bindingGuid string) ([]ScalingDecision, error)
+	GetScheduledLimitChanges(bindingGuid string) ([]ScheduledLimitChange, error)
+	CreateScheduledLimitChange(bindingGuid string, scheduledLimitChange *ScheduledLimitChange) (*ScheduledLimitChange, error)
+	UpdateScheduledLimitChange(bindingGuid string, changeGuid string, scheduledLimitChange *ScheduledLimitChange) (*ScheduledLimitChange, error)
 	DeleteScheduledLimitChange(bindingGuid string, changeGuid string) error
 }
 
 type AutoscalerConfig struct {
-	UAAConfig        *uaa_client.Config
+	UAAConfig        *Config
 	AutoscalerAPIUrl string
 	InstanceGUID     string
 }
 
 type DefaultAutoScalerClient struct {
-	httpClient uaa_client.OauthHttpWrapper
+	httpClient OauthHttpWrapper
 	config     *AutoscalerConfig
 }
 
 func NewAutoScalerClient(autoscalerConfig *AutoscalerConfig) (AutoScalerClient, error) {
 	uaaConfig := autoscalerConfig.UAAConfig
-	oauthWrapper, err := uaa_client.NewClient(uaaConfig)
+	oauthWrapper, err := NewClient(uaaConfig)
 
 	if err != nil {
 		return nil, err
@@ -48,7 +46,7 @@ func NewAutoScalerClient(autoscalerConfig *AutoscalerConfig) (AutoScalerClient, 
 	}, nil
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) GetServiceBindings() (*types.ServiceInstances, error) {
+func (autoscalerClient *DefaultAutoScalerClient) GetServiceBindings() (*ServiceInstances, error) {
 	serviceBindingsUrl := fmt.Sprintf("%s/instances/%s/bindings", autoscalerClient.config.AutoscalerAPIUrl, autoscalerClient.config.InstanceGUID)
 	request, err := autoscalerClient.httpClient.NewRequest("GET", serviceBindingsUrl, nil)
 	if err != nil {
@@ -63,7 +61,7 @@ func (autoscalerClient *DefaultAutoScalerClient) GetServiceBindings() (*types.Se
 		body, _ := ioutil.ReadAll(resp.Body)
 		return nil, fmt.Errorf("Bad Response: %s", body)
 	}
-	var serviceInstances types.ServiceInstances
+	var serviceInstances ServiceInstances
 
 	decoder := json.NewDecoder(resp.Body)
 	if err = decoder.Decode(&serviceInstances); err != nil {
@@ -74,7 +72,7 @@ func (autoscalerClient *DefaultAutoScalerClient) GetServiceBindings() (*types.Se
 
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) GetBinding(bindingGuid string) (*types.BindingResource, error) {
+func (autoscalerClient *DefaultAutoScalerClient) GetBinding(bindingGuid string) (*BindingResource, error) {
 	bindingUrl := fmt.Sprintf("%s/bindings/%s", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid)
 	request, err := autoscalerClient.httpClient.NewRequest("GET", bindingUrl, nil)
 	if err != nil {
@@ -89,7 +87,7 @@ func (autoscalerClient *DefaultAutoScalerClient) GetBinding(bindingGuid string) 
 		body, _ := ioutil.ReadAll(resp.Body)
 		return nil, fmt.Errorf("Bad Response: %s", body)
 	}
-	var binding types.BindingResource
+	var binding BindingResource
 
 	decoder := json.NewDecoder(resp.Body)
 	if err = decoder.Decode(&binding); err != nil {
@@ -98,7 +96,7 @@ func (autoscalerClient *DefaultAutoScalerClient) GetBinding(bindingGuid string) 
 	return &binding, nil
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) UpdateBinding(bindingGuid string, binding *types.Binding) (*types.BindingResource, error) {
+func (autoscalerClient *DefaultAutoScalerClient) UpdateBinding(bindingGuid string, binding *Binding) (*BindingResource, error) {
 	bindingUrl := fmt.Sprintf("%s/bindings/%s", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid)
 
 	body, err := json.Marshal(binding)
@@ -119,7 +117,7 @@ func (autoscalerClient *DefaultAutoScalerClient) UpdateBinding(bindingGuid strin
 		body, _ := ioutil.ReadAll(resp.Body)
 		return nil, fmt.Errorf("Bad Response: %s", body)
 	}
-	var bindingUpdated types.BindingResource
+	var bindingUpdated BindingResource
 
 	decoder := json.NewDecoder(resp.Body)
 	if err = decoder.Decode(&bindingUpdated); err != nil {
@@ -128,11 +126,11 @@ func (autoscalerClient *DefaultAutoScalerClient) UpdateBinding(bindingGuid strin
 	return &bindingUpdated, nil
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) GetScalingDecisions(bindingGuid string) ([]types.ScalingDecision, error) {
+func (autoscalerClient *DefaultAutoScalerClient) GetScalingDecisions(bindingGuid string) ([]ScalingDecision, error) {
 	return nil, fmt.Errorf("%s", "Not implemented...")
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) GetScheduledLimitChanges(bindingGuid string) ([]types.ScheduledLimitChange, error) {
+func (autoscalerClient *DefaultAutoScalerClient) GetScheduledLimitChanges(bindingGuid string) ([]ScheduledLimitChange, error) {
 	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid)
 
 	request, err := autoscalerClient.httpClient.NewRequest("GET", schedulesForBindingUrl, nil)
@@ -149,7 +147,7 @@ func (autoscalerClient *DefaultAutoScalerClient) GetScheduledLimitChanges(bindin
 		return nil, fmt.Errorf("Bad Response: %s", body)
 	}
 
-	var changesResource types.ScheduledLimitChangesResource
+	var changesResource ScheduledLimitChangesResource
 
 	decoder := json.NewDecoder(resp.Body)
 	if err = decoder.Decode(&changesResource); err != nil {
@@ -158,7 +156,7 @@ func (autoscalerClient *DefaultAutoScalerClient) GetScheduledLimitChanges(bindin
 	return changesResource.ScheduledLimitChanges, nil
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) CreateScheduledLimitChange(bindingGuid string, scheduledLimitChange *types.ScheduledLimitChange) (*types.ScheduledLimitChange, error) {
+func (autoscalerClient *DefaultAutoScalerClient) CreateScheduledLimitChange(bindingGuid string, scheduledLimitChange *ScheduledLimitChange) (*ScheduledLimitChange, error) {
 	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid)
 
 	body, err := json.Marshal(scheduledLimitChange)
@@ -181,7 +179,7 @@ func (autoscalerClient *DefaultAutoScalerClient) CreateScheduledLimitChange(bind
 		body, _ := ioutil.ReadAll(resp.Body)
 		return nil, fmt.Errorf("Status Code: %d, Body:%s", resp.StatusCode, body)
 	}
-	var scheduledLimitChangeUpdated types.ScheduledLimitChange
+	var scheduledLimitChangeUpdated ScheduledLimitChange
 
 	decoder := json.NewDecoder(resp.Body)
 	if err = decoder.Decode(&scheduledLimitChangeUpdated); err != nil {
@@ -190,7 +188,7 @@ func (autoscalerClient *DefaultAutoScalerClient) CreateScheduledLimitChange(bind
 	return &scheduledLimitChangeUpdated, nil
 }
 
-func (autoscalerClient *DefaultAutoScalerClient) UpdateScheduledLimitChange(bindingGuid string, changeGuid string, scheduledLimitChange *types.ScheduledLimitChange) (*types.ScheduledLimitChange, error) {
+func (autoscalerClient *DefaultAutoScalerClient) UpdateScheduledLimitChange(bindingGuid string, changeGuid string, scheduledLimitChange *ScheduledLimitChange) (*ScheduledLimitChange, error) {
 	schedulesForBindingUrl := fmt.Sprintf("%s/bindings/%s/scheduled_limit_changes/%s", autoscalerClient.config.AutoscalerAPIUrl, bindingGuid, changeGuid)
 
 	body, err := json.Marshal(scheduledLimitChange)
@@ -212,7 +210,7 @@ func (autoscalerClient *DefaultAutoScalerClient) UpdateScheduledLimitChange(bind
 		body, _ := ioutil.ReadAll(resp.Body)
 		return nil, fmt.Errorf("Bad Response: %s", body)
 	}
-	var scheduledLimitChangeUpdated types.ScheduledLimitChange
+	var scheduledLimitChangeUpdated ScheduledLimitChange
 
 	decoder := json.NewDecoder(resp.Body)
 	if err = decoder.Decode(&scheduledLimitChangeUpdated); err != nil {

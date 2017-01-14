@@ -1,4 +1,4 @@
-package uaa_client_test
+package autoscaler_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -9,5 +9,5 @@ import (
 
 func TestSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "UAA Client related suite")
+	RunSpecs(t, "Instance related Suite")
 }

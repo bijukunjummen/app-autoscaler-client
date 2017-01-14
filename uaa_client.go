@@ -1,4 +1,4 @@
-package uaa_client
+package autoscaler
 
 import (
 	"fmt"

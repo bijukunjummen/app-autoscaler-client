@@ -1,4 +1,4 @@
-package types_test
+package autoscaler_test
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 
 	"time"
 
-	. "github.com/bijukunjummen/app-autoscaler-client/types"
+	. "github.com/bijukunjummen/app-autoscaler-client"
 )
 
 var _ = Describe("ServiceInstances type", func() {

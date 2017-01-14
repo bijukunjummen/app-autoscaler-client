@@ -1,4 +1,4 @@
-package uaa_client_test
+package autoscaler_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -6,7 +6,7 @@ import (
 
 	"net/http"
 
-	. "github.com/bijukunjummen/app-autoscaler-client/uaa_client"
+	. "github.com/bijukunjummen/app-autoscaler-client"
 	"github.com/onsi/gomega/ghttp"
 )
 
