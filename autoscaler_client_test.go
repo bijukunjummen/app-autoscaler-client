@@ -9,8 +9,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/onsi/gomega/ghttp"
 	"github.com/bijukunjummen/app-autoscaler-client"
+	"github.com/onsi/gomega/ghttp"
 )
 
 var _ = Describe("Behavior of Auto Scaler", func() {

@@ -3,7 +3,6 @@ package autoscaler
 import (
 	"fmt"
 
-
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
