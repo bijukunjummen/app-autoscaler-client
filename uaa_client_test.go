@@ -43,7 +43,7 @@ var _ = Describe("UAA Client", func() {
 				),
 			)
 			config = CFConfig{
-				CCApiUrl:          server.URL(),
+				CCApiURL:          server.URL(),
 				Username:          "admin",
 				Password:          "admin",
 				SkipSslValidation: true,

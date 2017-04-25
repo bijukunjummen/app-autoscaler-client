@@ -136,7 +136,7 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 		server = ghttp.NewServer()
 		config = &autoscaler.Config{
 			CFConfig: &autoscaler.CFConfig{
-				CCApiUrl:          server.URL(),
+				CCApiURL:          server.URL(),
 				Username:          "user",
 				Password:          "pwd",
 				SkipSslValidation: true,
@@ -315,7 +315,7 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 		var scheduledLimitChangeObj autoscaler.ScheduledLimitChange
 		err := json.Unmarshal([]byte(scheduledLimitChange), &scheduledLimitChangeObj)
 		Ω(err).Should(BeNil())
-		scheduleUpdated, err := client.UpdateScheduledLimitChange("mybinding", "changeid", &scheduledLimitChangeObj)
+		scheduleUpdated, _ := client.UpdateScheduledLimitChange("mybinding", "changeid", &scheduledLimitChangeObj)
 		Ω(scheduleUpdated.Enabled).Should(BeTrue())
 		Ω(scheduleUpdated.Recurrence).Should(Equal(20))
 		Ω(scheduleUpdated.ServiceBindingGUID).Should(Equal("540f43bc-b9cc-4126-97a4-a56b64052da4"))
@@ -339,7 +339,7 @@ var _ = Describe("Behavior of Auto Scaler", func() {
 		var scheduledLimitChangeObj autoscaler.ScheduledLimitChange
 		err := json.Unmarshal([]byte(scheduledLimitChange), &scheduledLimitChangeObj)
 		Ω(err).Should(BeNil())
-		scheduleUpdated, err := client.CreateScheduledLimitChange("mybinding", &scheduledLimitChangeObj)
+		scheduleUpdated, _ := client.CreateScheduledLimitChange("mybinding", &scheduledLimitChangeObj)
 		Ω(scheduleUpdated.Enabled).Should(BeTrue())
 		Ω(scheduleUpdated.Recurrence).Should(Equal(20))
 		Ω(scheduleUpdated.ServiceBindingGUID).Should(Equal("540f43bc-b9cc-4126-97a4-a56b64052da4"))

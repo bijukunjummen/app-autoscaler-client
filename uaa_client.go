@@ -29,33 +29,35 @@ type AccessToken struct {
 	JTI       string
 }
 
-// Config represents all the configuration for making a oauth2 call
+// CFConfig Config represents all the configuration for making a oauth2 call
 type CFConfig struct {
-	CCApiUrl          string
+	CCApiURL          string
 	Username          string
 	Password          string
-	ClientId          string
+	ClientID          string
 	ClientSecret      string
 	SkipSslValidation bool
 	httpClient        *http.Client
 	TokenSource       oauth2.TokenSource
 }
 
-type OauthHttpWrapper interface {
+// OauthHTTPWrapper is an http client wrapper that makes the call with an oauth2 token
+type OauthHTTPWrapper interface {
 	NewCCRequest(method, path string, body io.Reader) (*http.Request, error)
 	NewRequest(method, url string, body io.Reader) (*http.Request, error)
 	Do(request *http.Request) (*http.Response, error)
 }
 
-// Client - UAA Client
+// TokenHandlingClient - UAA Client
 type TokenHandlingClient struct {
 	Config   *CFConfig
 	Endpoint *Endpoint
 }
 
+// DefaultCFConfig - default configuraiton for making CF calls
 func DefaultCFConfig() *CFConfig {
 	return &CFConfig{
-		CCApiUrl:          "https://api.local.pcfdev.io",
+		CCApiURL:          "https://api.local.pcfdev.io",
 		Username:          "admin",
 		Password:          "admin",
 		SkipSslValidation: true,
@@ -63,8 +65,8 @@ func DefaultCFConfig() *CFConfig {
 	}
 }
 
-// NewClient - Creates a new UAA Client
-func NewUAAClient(config *CFConfig) (OauthHttpWrapper, error) {
+// NewUAAClient - Creates a new UAA Client
+func NewUAAClient(config *CFConfig) (OauthHTTPWrapper, error) {
 	ctx := context.Background()
 	defConfig := DefaultCFConfig()
 
@@ -77,14 +79,14 @@ func NewUAAClient(config *CFConfig) (OauthHttpWrapper, error) {
 		ctx = context.WithValue(ctx, oauth2.HTTPClient, &http.Client{Transport: tr})
 	}
 
-	endpoint, err := getInfo(config.CCApiUrl, oauth2.NewClient(ctx, nil))
+	endpoint, err := getInfo(config.CCApiURL, oauth2.NewClient(ctx, nil))
 
 	if err != nil {
 		return nil, fmt.Errorf("Could not get api /v2/info: %v", err)
 	}
 
 	switch {
-	case config.ClientId != "":
+	case config.ClientID != "":
 		config = getClientAuth(config, endpoint, ctx)
 	default:
 		config, err = getUserAuth(config, endpoint, ctx)
@@ -100,14 +102,17 @@ func NewUAAClient(config *CFConfig) (OauthHttpWrapper, error) {
 	return client, nil
 }
 
+// Do ...
 func (client *TokenHandlingClient) Do(request *http.Request) (*http.Response, error) {
 	return client.Config.httpClient.Do(request)
 }
 
+// NewCCRequest ...
 func (client *TokenHandlingClient) NewCCRequest(method, path string, body io.Reader) (*http.Request, error) {
-	return http.NewRequest(method, fmt.Sprintf("%s%s", client.Config.CCApiUrl, path), body)
+	return http.NewRequest(method, fmt.Sprintf("%s%s", client.Config.CCApiURL, path), body)
 }
 
+// NewRequest ...
 func (client *TokenHandlingClient) NewRequest(method, url string, body io.Reader) (*http.Request, error) {
 	return http.NewRequest(method, url, body)
 }
@@ -136,7 +141,7 @@ func getUserAuth(config *CFConfig, endpoint *Endpoint, ctx context.Context) (*CF
 
 func getClientAuth(config *CFConfig, endpoint *Endpoint, ctx context.Context) *CFConfig {
 	authConfig := &clientcredentials.Config{
-		ClientID:     config.ClientId,
+		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
 		TokenURL:     endpoint.TokenEndpoint + "/oauth/token",
 	}

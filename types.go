@@ -65,10 +65,12 @@ type BindingResource struct {
 	Links map[string]Link `json:"links,omitempty"`
 }
 
+//ScheduledLimitChangesResource ...
 type ScheduledLimitChangesResource struct {
 	ScheduledLimitChanges []ScheduledLimitChange `json:"resources"`
 }
 
+//ScalingDecisionsResource ...
 type ScalingDecisionsResource struct {
 	ScalingDecisions []ScalingDecision `json:"resources"`
 }
