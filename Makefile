@@ -5,6 +5,6 @@ test:
 	# go test $$(glide novendor)
 
 fmt:
-	 go fmt $$(glide novendor)
+	 go fmt 
 cover:
 	ginkgo -cover -r -v
